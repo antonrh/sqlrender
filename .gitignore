@@ -1,0 +1,36 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go build outputs
+*.test
+*.out
+*.prof
+*.pprof
+*.cov
+*.cover
+*.coverage
+*.tmp
+
+# go test -c binary
+*.test
+
+# Output of `go test -json`
+testdata/tmp/
+
+# Local build caches
+/.gocache/
+/.cache/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS metadata
+.DS_Store

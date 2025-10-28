@@ -1,0 +1,9 @@
+site_name: SQLRender
+site_description: SQL template rendering and binding helpers for Go.
+site_author: Anton Ruhlov
+repo_url: https://github.com/antonrh/sqlrender
+theme:
+  name: material
+nav:
+  - Home: index.md
+  - Usage: usage.md
