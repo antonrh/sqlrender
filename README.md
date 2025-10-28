@@ -69,5 +69,3 @@ if err != nil {
 	log.Fatal(err)
 }
 ```
-
-SQLRender looks through the provided directories until it finds the file and applies the same helpers as with inline strings.
