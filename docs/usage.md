@@ -1,10 +1,10 @@
 # Usage Guide
 
-This page walks through the common ways people reach for SQLRender. Each section is short and to the point so you can copy, adjust, and ship.
+This guide covers the most common ways to use SQLRender. Each example is short and practical so you can copy, adapt, and reuse it immediately.
 
-## 1. Rendering inline strings
+## 1. Render Inline Strings
 
-If you already have the SQL in your Go source, call `FromString`. The `bind` helper adds placeholders and collects parameters in order.
+If your SQL is defined directly in Go code, use `FromString`. The `bind` helper replaces placeholders and collects parameters in order.
 
 ```go
 renderer := sqlrender.NewRenderer(sqlrender.DialectPostgres)
@@ -20,9 +20,9 @@ if err != nil {
 // args    => []any{42}
 ```
 
-## 2. Loading templates from file
+## 2. Load Templates from Files
 
-Prefer to keep SQL next to migrations or in a shared folder? Point the renderer at that directory and use `FromTemplate`.
+To keep SQL in separate files (next to migrations or shared queries), use `FromTemplate` and specify one or more search paths.
 
 ```go
 renderer := sqlrender.NewRenderer(sqlrender.DialectMySQL).
@@ -36,11 +36,11 @@ if err != nil {
 }
 ```
 
-`AddSearchPath` can be called multiple times. SQLRender walks the list until it finds the requested file.
+You can call `AddSearchPath` multiple times. SQLRender searches each directory until it finds the requested file.
 
-## 3. Switching dialects
+## 3. Switch Dialects
 
-You can reuse the same template for multiple databases. Pass a different dialect when rendering and the placeholders adjust automatically.
+The same template can be reused across multiple databases. Specify a different dialect when rendering, and SQLRender adjusts placeholders automatically.
 
 ```go
 renderer := sqlrender.NewRenderer(sqlrender.DialectMySQL)
@@ -52,16 +52,16 @@ postgresSQL, postgresArgs, err := renderer.FromStringWithDialect(
 )
 ```
 
-Need schema-qualified names? The `identifier` helper quotes them safely:
+To safely quote schema or table names, use the `identifier` helper:
 
-```gotemplate
+```sql
 SELECT {{ identifier "public.users" }}.*
 FROM {{ identifier "public.users" }}
 ```
 
-## 4. Adding your own helper functions
+## 4. Add Helper Functions
 
-Bring any helper logic you need straight into the template engine.
+Add custom logic to templates with `AddFunc` or `AddFuncs`.
 
 ```go
 renderer := sqlrender.NewRenderer(sqlrender.DialectSQLite).
@@ -70,11 +70,11 @@ renderer := sqlrender.NewRenderer(sqlrender.DialectSQLite).
 	})
 ```
 
-Helpers registered via `AddFunc` or `AddFuncs` are available to every template rendered by that renderer.
+All registered helpers are available to every template rendered by that renderer instance.
 
-## 5. Working with `database/sql`
+## 5. Work with database/sql
 
-Rendering is only half the story—here’s how you can send the result to a real driver. This example uses PostgreSQL, but any driver that matches the dialect works the same way.
+Once SQLRender generates the query text and arguments, execute them directly with any `database/sql` driver.
 
 ```go
 import (
@@ -100,25 +100,19 @@ if err != nil {
 }
 defer db.Close()
 
-stmt, err := db.Prepare(query)
-if err != nil {
-	return err
-}
-defer stmt.Close()
-
-rows, err := stmt.Query(args...)
+rows, err := db.Query(query, args...)
 if err != nil {
 	return err
 }
 defer rows.Close()
 ```
 
-SQLRender focuses on creating valid SQL and argument slices. The database driver does the rest.
+SQLRender focuses on producing valid SQL and argument slices — the driver handles the rest.
 
-## 6. Error signals to watch for
+## 6. Handle Errors
 
-- **“invalid identifier” panic** – `identifier` found characters outside the allowed set. Double-check the value passed into the template.
-- **File not found** – `FromTemplate` lists the search paths it walked. Make sure the directory and filename are correct.
-- **Template execution error** – bubbled up from `text/template` or a custom function. Fix the helper or the data passed in.
+Common error signals include:
 
-That’s it! Drop SQLRender into the parts of your code where raw string concatenation feels risky, and let it handle the boring pieces.
+- `invalid identifier panic`: the `identifier` helper detected invalid characters. Check the input string.
+- `file not found`: `FromTemplate` lists all paths it searched. Verify the directory and filename.
+- `template execution error`: an error occurred in `text/template` or a custom helper. Check the template logic or data.

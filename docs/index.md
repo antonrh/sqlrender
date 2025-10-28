@@ -1,23 +1,6 @@
-# SQLRender
+# Quick Start
 
-SQLRender keeps SQL templates friendly without giving up on safety. Feed it a Go `text/template`, point it at a SQL dialect, and it takes care of building placeholders, quoting identifiers, and collecting arguments for you.
-
-## Why SQLRender?
-
-- Works across PostgreSQL, MySQL, SQLite, SQL Server, Snowflake, and Oracle.
-- Turns slices and arrays into proper `IN (...)` lists with the right placeholders.
-- Quotes identifiers only if they contain safe characters, so mistakes surface early.
-- Lets you drop in your own helper functions or load templates from disk.
-
-## Installation
-
-```bash
-go get github.com/antonrh/sqlrender
-```
-
-Use your own module path if you publish a fork.
-
-## Quick peek
+Here’s a minimal example that renders a SQL query with placeholders and arguments ready for `database/sql`.
 
 ```go
 renderer := sqlrender.NewRenderer(sqlrender.DialectPostgres)
@@ -34,11 +17,49 @@ fmt.Println(sql)
 fmt.Println(args)
 ```
 
-Output:
+**Output**
 
-```
+```text
 SELECT * FROM users WHERE id IN ($1, $2, $3)
 [1 2 3]
 ```
 
-Head to the [usage guide](usage.md) when you’re ready for more examples.
+## How It Works
+
+- `Templates`: write SQL using Go’s `text/template` syntax.
+- `Helpers`: use built-in helpers like `bind` and `identifier`, or register your own.
+- `Dialect Awareness`: SQLRender picks the right placeholder style for your database automatically.
+- `Result`: get validated SQL plus an args slice ready for `database/sql`.
+
+## When to Use SQLRender
+
+- You want to avoid unsafe string concatenation in SQL queries.
+- You prefer templated SQL files but still need correct placeholders and bindings.
+- You maintain a codebase that targets multiple SQL dialects.
+- You need parameterized, testable SQL without adding ORM complexity.
+
+## Example: Use with database/sql
+
+```go
+db, err := sql.Open("postgres", os.Getenv("PG_DSN"))
+if err != nil {
+	log.Fatal(err)
+}
+defer db.Close()
+
+renderer := sqlrender.NewRenderer(sqlrender.DialectPostgres)
+
+query, args, err := renderer.FromString(
+	`SELECT * FROM users WHERE email = {{ bind .Email }}`,
+	map[string]any{"Email": "test@example.com"},
+)
+if err != nil {
+	log.Fatal(err)
+}
+
+rows, err := db.Query(query, args...)
+if err != nil {
+	log.Fatal(err)
+}
+defer rows.Close()
+```
