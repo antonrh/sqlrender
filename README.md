@@ -1,13 +1,6 @@
 # SQLRender
 
-SQLRender is a tiny helper for people who like SQL templates but dislike hand-crafted placeholder lists. Point it at a dialect, feed it a Go `text/template`, and it returns ready-to-run SQL plus the arguments slice you can give to `database/sql`.
-
-## What SQLRender handles
-
-- Picks the right placeholder style for PostgreSQL, MySQL, SQLite, SQL Server, Snowflake, and Oracle.
-- Expands slices and arrays so `IN` clauses are painless.
-- Quotes identifiers safely and fails fast if a name looks suspicious.
-- Lets you share templates via search paths and custom helper functions.
+`SQLRender` is a small helper tool that lets you write SQL using Go templates.
 
 ## Install
 
@@ -55,8 +48,6 @@ func main() {
 ```
 
 ### Rendering templates from file
-
-Keep SQL files in version control? Add a search path and call `FromTemplate`.
 
 ```go
 renderer := sqlrender.NewRenderer(sqlrender.DialectPostgres).
